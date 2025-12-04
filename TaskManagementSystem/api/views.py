@@ -6,7 +6,7 @@ from rest_framework import status
 from .models import Task
 from .serializer import TaskSerializer, RegisterSerializer
 from rest_framework.permissions import IsAuthenticated
-
+from .logs.utils import log_activity
 # Create your views here.
 
 
@@ -30,7 +30,8 @@ class TaskListAPIView(APIView):
     def post(self, request):
         serializer = TaskSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(created_by=request.user)
+            task = serializer.save(created_by=request.user)
+            log_activity(self.request.user, "created task", task.id)
             # serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -47,6 +48,7 @@ class TaskDetailsAPIView(APIView):
             return None
 # retrieve, update, delete a task by id
 
+# get a task
     def get(self, request, pk):
         task = self.get_object(pk, request.user)
         if not task:
@@ -54,15 +56,18 @@ class TaskDetailsAPIView(APIView):
         serializer = TaskSerializer(task)
         return Response(serializer.data)
 
+# update a task
     def put(self, request, pk):
         task = self.get_object(pk, request.user)
         if not task:
             return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
         serializer = TaskSerializer(task, data=request.data)
         if serializer.is_valid():
-            serializer.save()
+            task2 = serializer.save()
+            log_activity(self.request.user, "updated task", task2.id)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# partial update
 
     def patch(self, request, pk):
         task = self.get_object(pk, request.user)
@@ -73,14 +78,18 @@ class TaskDetailsAPIView(APIView):
 
         serializer = TaskSerializer(task, data=request.data, partial=True)
         if serializer.is_valid():
-            serializer.save()
+            task2 = serializer.save()
+            log_activity(self.request.user, "updated task", task2.id)
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+# delete a task
     def delete(self, request, pk):
         task = self.get_object(pk, request.user)
         if not task:
             return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        log_activity(self.request.user, "deleted task", task.id)
         task.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
