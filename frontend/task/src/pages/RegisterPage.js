@@ -11,6 +11,7 @@ const RegisterPage = () => {
     const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    
     const handleRegister = async(e) => {
         e.preventDefault();
 
@@ -37,35 +38,36 @@ const RegisterPage = () => {
             console.log("Registration successful:", response.data);
             // Handle successful registration (e.g., redirect to login)
             navigate("/login");
-        }catch (err)  {
-        console.error("Full error:", err);
-        console.error("Response data:", err.response?.data);
-        console.error("Status:", err.response?.status);
-        
-        // Display specific error messages from backend
-        if (err.response?.data) {
-            const errors = err.response.data;
-            let errorMessage = "";
+        } catch (err) {
+            console.error("Full error:", err);
+            console.error("Response data:", err.response?.data);
+            console.error("Status:", err.response?.status);
             
-            // Handle different error formats
-            if (typeof errors === 'string') {
-                errorMessage = errors;
-            } else if (typeof errors === 'object') {
-                // Combine all error messages
-                errorMessage = Object.entries(errors)
-                    .map(([field, messages]) => {
-                        const msg = Array.isArray(messages) ? messages.join(" ") : messages;
-                        return `${field}: ${msg}`;
-                    })
-                    .join(", ");
+            // Display specific error messages from backend
+            if (err.response?.data) {
+                const errors = err.response.data;
+                let errorMessage = "";
+                
+                // Handle different error formats
+                if (typeof errors === 'string') {
+                    errorMessage = errors;
+                } else if (typeof errors === 'object') {
+                    // Combine all error messages
+                    errorMessage = Object.entries(errors)
+                        .map(([field, messages]) => {
+                            const msg = Array.isArray(messages) ? messages.join(" ") : messages;
+                            return `${field}: ${msg}`;
+                        })
+                        .join(", ");
+                }
+                
+                setError(errorMessage || "Registration failed. Please try again.");
+            } else {
+                setError("Registration failed. Please check your connection.");
             }
-            
-            setError(errorMessage || "Registration failed. Please try again.");
-        } else {
-            setError("Registration failed. Please check your connection.");
         }
     }
-    }
+    
 return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">

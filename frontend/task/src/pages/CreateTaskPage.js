@@ -9,7 +9,7 @@ export default function CreateTasksPage() {
     const [dueDate, setDueDate] = useState("");
     const [priority, setPriority] = useState("medium");
     const [error, setError] = useState("");
-    // const[assigned_to, setAssignedTo] = useState("");
+    const [assignedTo, setAssignedTo] = useState("");
     const navigate = useNavigate();
 
     const handleCreateTask = async (e) => {
@@ -32,7 +32,7 @@ export default function CreateTasksPage() {
                 status,
                 due_date: dueDate,
                 priority,
-                // assigned_to,
+                assigned_to: assignedTo,
             },
             {
                 headers: {
@@ -76,14 +76,15 @@ export default function CreateTasksPage() {
                         />
                     </div>
                     <div>
-                        {/* <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
+                        <label htmlFor="assignedTo" className="block text-sm font-medium text-gray-700 mb-1">Assign To</label>
                         <input
                             id="assignedTo"
                             type="text" 
                             placeholder="Assign To (username)"
+                            value={assignedTo}
                             onChange={(e) => setAssignedTo(e.target.value)}
                             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        /> */}
+                        />
                     </div>
                     <div>
                         <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
