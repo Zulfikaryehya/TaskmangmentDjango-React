@@ -1,0 +1,143 @@
+# ============================================================================
+# DOCKER COMPOSE CONFIGURATION
+# Task Management System - Django + MySQL + MongoDB Atlas
+# ============================================================================
+version: '3.8'
+
+services:
+  # ==========================================================================
+  # MYSQL DATABASE SERVICE
+  # ==========================================================================
+  mysql:
+    image: mysql:8.0
+    container_name: task_mysql
+    restart: unless-stopped
+    
+    environment:
+      # MySQL Configuration
+      MYSQL_ROOT_PASSWORD: "@@2017@@"
+      MYSQL_DATABASE: TaskManger2           # Your database name
+      MYSQL_USER: django_user               # App user
+      MYSQL_PASSWORD: "@@2017@@"       # App user password
+    
+    ports:
+      - "3306:3306"  # Access MySQL from host
+    
+    volumes:
+      - mysql_data:/var/lib/mysql  # Persist database data
+    
+    networks:
+      - task_network
+    
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p@@2017@@"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    # Optional: Custom MySQL configuration
+    command: --default-authentication-plugin=mysql_native_password
+
+  # ==========================================================================
+  # DJANGO BACKEND SERVICE
+  # ==========================================================================
+  backend:
+    build:
+      context: ./TaskManagementSystem  # Where your Django code is
+      dockerfile: Dockerfile
+    
+    container_name: task_backend
+    restart: unless-stopped
+    
+    # Run migrations and start server
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    
+    volumes:
+      # Mount code for live reload during development
+      - ./TaskManagementSystem:/app
+    
+    ports:
+      - "8000:8000"  # Access Django at http://localhost:8000
+    
+    environment:
+      # Django Settings
+      - DEBUG=1
+      - SECRET_KEY=docker-dev-secret-key-change-in-production
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+      
+      # MySQL Configuration (must match mysql service)
+      - DB_ENGINE=django.db.backends.mysql
+      - DB_NAME=TaskManger2            # Must match MYSQL_DATABASE
+      - DB_USER=django_user            # Must match MYSQL_USER
+      - DB_PASSWORD=@@2017@@   # Must match MYSQL_PASSWORD
+      - DB_HOST=mysql                  # Service name (Docker DNS)
+      - DB_PORT=3306
+      
+      # MongoDB Atlas Configuration (your cloud MongoDB)
+      - MONGO_URI=mongodb+srv://zulfikar:R9fykZI8eYiXqQH2@userlogs.rreu6m1.mongodb.net/?appName=userLogs
+      - MONGO_DB=logs_db
+      
+      # CORS Settings
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost
+      - CORS_ALLOW_ALL_ORIGINS=1
+    
+    depends_on:
+      mysql:
+        condition: service_healthy
+    
+    networks:
+      - task_network
+
+
+ # ==========================================================================
+  # REACT FRONTEND SERVICE (DEVELOPMENT MODE)
+  # ==========================================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    
+    container_name: task_frontend
+    restart: unless-stopped
+    
+    volumes:
+      - ./frontend/task:/app              # Mount source for hot reload ✨
+      - /app/node_modules            # Preserve node_modules in container
+    
+    ports:
+      - "3000:3000"                  # React dev server
+    
+    environment:
+      - CHOKIDAR_USEPOLLING=true     # Enable file watching on Windows
+      - REACT_APP_API_URL=http://localhost:8000/api
+    
+    depends_on:
+      - backend
+    
+    networks:
+      - task_network
+    
+    stdin_open: true                 # Keep container running
+    tty: true                        # Allocate pseudo-TTY
+
+# ============================================================================
+# VOLUMES (PERSISTENT STORAGE)
+# ============================================================================
+volumes:
+  mysql_data:
+    driver: local
+    # MySQL data persists here even after containers stop
+    # Located in Docker Desktop's data directory
+
+# ============================================================================
+# NETWORKS (CONTAINER COMMUNICATION)
+# ============================================================================
+networks:
+  task_network:
+    driver: bridge
+    # All services can communicate using service names:
+    # - backend → mysql:3306
+    # - MongoDB Atlas is external (internet connection)

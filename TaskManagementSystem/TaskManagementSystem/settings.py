@@ -14,7 +14,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from corsheaders.defaults import default_headers
 from mongoengine import connect
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,13 +23,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-qp$dx9@7rywr_x9op(h@g3+y@_w(=i^&kj#rmtrdv^(j7*pfcu'
+SECRET_KEY = os.getenv(
+    'SECRET_KEY', 'django-insecure-qp$dx9@7rywr_x9op(h@g3+y@_w(=i^&kj#rmtrdv^(j7*pfcu')
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', '1') == '1'
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 # Application definition
 
@@ -84,14 +85,15 @@ WSGI_APPLICATION = 'TaskManagementSystem.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'TaskManger2',
-        'USER': 'root',
-        'PASSWORD': '@@2017@@',
-        'HOST': '127.0.0.1',
-        'PORT': '3306',
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.mysql'),
+        'NAME': os.getenv('DB_NAME', 'TaskManger3'),
+        'USER': os.getenv('DB_USER', 'django_user'),
+        'PASSWORD': os.getenv('DB_PASSWORD', '@@2017@@'),
+        'HOST': os.getenv('DB_HOST', '127.0.0.1'),  # 'mysql' in Docker
+        'PORT': os.getenv('DB_PORT', '3306'),
         'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
         }
     }
 }
@@ -157,8 +159,19 @@ CORS_ALLOW_HEADERS = list(default_headers) + [
     "authorization",
 ]
 
-# for mongodb connection
-connect(
-    db="logs_db",
-    host="mongodb+srv://zulfikar:R9fykZI8eYiXqQH2@userlogs.rreu6m1.mongodb.net/?appName=userLogs"
+# # for mongodb connection
+# connect(
+#     db="logs_db",
+#     host="mongodb+srv://zulfikar:R9fykZI8eYiXqQH2@userlogs.rreu6m1.mongodb.net/?appName=userLogs"
+# )
+# ============================================================================
+# MONGOENGINE CONNECTION (for logs/documents)
+# ============================================================================
+MONGO_URI = os.getenv(
+    'MONGO_URI',
+    'mongodb+srv://zulfikar:R9fykZI8eYiXqQH2@userlogs.rreu6m1.mongodb.net/?appName=userLogs'
 )
+MONGO_DB = os.getenv('MONGO_DB', 'logs_db')
+
+# Connect to MongoDB Atlas using MongoEngine
+connect(db=MONGO_DB, host=MONGO_URI, alias='default')

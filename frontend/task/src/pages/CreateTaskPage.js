@@ -9,7 +9,7 @@ export default function CreateTasksPage() {
     const [dueDate, setDueDate] = useState("");
     const [priority, setPriority] = useState("medium");
     const [error, setError] = useState("");
-    const[assigned_to, setAssignedTo] = useState("");
+    // const[assigned_to, setAssignedTo] = useState("");
     const navigate = useNavigate();
 
     const handleCreateTask = async (e) => {
@@ -32,7 +32,7 @@ export default function CreateTasksPage() {
                 status,
                 due_date: dueDate,
                 priority,
-                assigned_to,
+                // assigned_to,
             },
             {
                 headers: {
