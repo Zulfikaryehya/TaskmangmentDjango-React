@@ -9,7 +9,7 @@ import CreateTasksPage from './pages/CreateTaskPage';
 import EditTaskPage from './pages/EditPage';
 import LogsPage from './pages/LogsPage';
 import SuperuserRoute from './component/SuperuserRoute';
-
+import UserProfilePage from './pages/UserProfilePage';
 const router = createBrowserRouter ([
     {path: "/", element: <LoginPage />},
   {path: "/login", element: <LoginPage />},
@@ -18,6 +18,7 @@ const router = createBrowserRouter ([
   {path: "/create-task", element: <CreateTasksPage />},
   {path: "/tasks/:id/edit", element: <EditTaskPage />},
   {path : "logs", element: <SuperuserRoute><LogsPage /></SuperuserRoute>},
+  {path : "user-profile", element: <UserProfilePage />},
 ]);
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

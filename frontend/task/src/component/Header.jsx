@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import { FaPlus, FaFilter, FaClipboardList, FaSignOutAlt, FaUser, FaTasks } from 'react-icons/fa';
 
-export default function Header({ statusFilter, setStatusFilter, navigate, handleLogout }) {
+export default function Header({ statusFilter, setStatusFilter, handleLogout }) {
+    const navigate = useNavigate();
     const [isSuperuser, setIsSuperuser] = useState(false);
 
     useEffect(() => {
@@ -23,54 +26,96 @@ export default function Header({ statusFilter, setStatusFilter, navigate, handle
         checkSuperuser();
     }, []);
 
+    const handleLogoutClick = () => {
+        if (handleLogout) {
+            handleLogout();
+        } else {
+            localStorage.removeItem("access_token");
+            localStorage.removeItem("refresh_token");
+            navigate("/login");
+        }
+    };
+
     return (   
-      <header className="bg-white shadow-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
-          <div className="flex gap-4 items-center">
-            {/* Filter Dropdown */}
-            <div className="flex items-center gap-2">
-              <label htmlFor="statusFilter" className="text-sm font-medium text-gray-700">
-                Filter:
-              </label>
-              <select
-                id="statusFilter"
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
-              >
-                <option value="">All Tasks</option>
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-              </select>
+      <header className="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            {/* Logo/Brand Section */}
+            <div className="flex items-center space-x-3">
+              <div className="bg-white bg-opacity-20 p-2 rounded-lg backdrop-blur-sm">
+                <FaTasks className="text-white text-2xl" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white tracking-tight">Task Manager</h1>
+                <p className="text-blue-100 text-xs">Stay organized, stay productive</p>
+              </div>
             </div>
 
-            <button
-              onClick={() => navigate("/create-task")}
-              className="bg-green-500 hover:bg-green-600 text-white font-semibold px-6 py-2 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 shadow-md"
-            >
-              + New Task
-            </button>
+            {/* Actions Section */}
+            <div className="flex gap-3 items-center">
+              {/* Filter Dropdown */}
+              <div className="relative">
+                <div className="flex items-center bg-white bg-opacity-10 backdrop-blur-md rounded-lg px-4 py-2 border border-white border-opacity-20">
+                  <FaFilter className="text-white text-sm mr-2" />
+                  <select
+                    id="statusFilter"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="bg-transparent text-white font-medium focus:outline-none cursor-pointer appearance-none pr-8"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 0.5rem center',
+                      backgroundSize: '1.5em 1.5em',
+                    }}
+                  >
+                    <option value="" className="bg-gray-800 text-white">All Tasks</option>
+                    <option value="pending" className="bg-gray-800 text-white">Pending</option>
+                    <option value="completed" className="bg-gray-800 text-white">Completed</option>
+                  </select>
+                </div>
+              </div>
 
-            {/* View Logs Button - Only for superusers */}
-            {isSuperuser && (
+              {/* New Task Button */}
               <button
-                onClick={() => navigate("/logs")}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 shadow-md flex items-center gap-2"
+                onClick={() => navigate("/create-task")}
+                className="bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-xl flex items-center gap-2 border-2 border-green-400"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                View Logs
+                <FaPlus className="text-sm" />
+                <span className="hidden sm:inline">New Task</span>
               </button>
-            )}
 
-            <button 
-              onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white font-semibold px-6 py-2 rounded-lg transition duration-200 ease-in-out transform hover:scale-105 shadow-md"
-            >
-              Logout
-            </button>
+              {/* View Logs Button - Only for superusers */}
+              {isSuperuser && (
+                <button
+                  onClick={() => navigate("/logs")}
+                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold px-5 py-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 backdrop-blur-md border border-white border-opacity-30 flex items-center gap-2"
+                >
+                  <FaClipboardList className="text-sm" />
+                  <span className="hidden md:inline">Logs</span>
+                </button>
+              )}
+
+              {/* User Profile Button */}
+              <button
+                onClick={() => navigate("/user-profile")}
+                className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold px-5 py-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 backdrop-blur-md border border-white border-opacity-30 flex items-center gap-2"
+                title="View Profile"
+              >
+                <FaUser className="text-sm" />
+                <span className="hidden md:inline">Profile</span>
+              </button>
+
+              {/* Logout Button */}
+              <button 
+                onClick={handleLogoutClick}
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-5 py-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-xl flex items-center gap-2 border-2 border-red-400"
+                title="Logout"
+              >
+                <FaSignOutAlt className="text-sm" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>);

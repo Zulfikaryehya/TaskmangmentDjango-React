@@ -1,36 +1,18 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-
 # -----------------------------
-# Team Model
+# Profile Model (Extending User Model)
 # -----------------------------
-class Team(models.Model):
-    name = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True, max_length=500)
-
-    def __str__(self) -> str:  # pylint: disable=missing-function-docstring
-
-        return str(self.name)
 
 
-# -----------------------------
-# Team Membership Model
-# -----------------------------
-class TeamMembership(models.Model):
-    ROLE_CHOICES = [
-        ('leader', 'Leader'),
-        ('member', 'Member'),
-    ]
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    role = models.CharField(
-        max_length=20, choices=ROLE_CHOICES, default='member')
-
-    # Prevent user from joining the same team twice
-    class Meta:
-        unique_together = ('user', 'team')
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    # Your custom fields:
+    phone = models.CharField(max_length=20, blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
+    # avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    role = models.CharField(max_length=20, default="member")  # example
 
 
 # -----------------------------
@@ -49,7 +31,6 @@ class Task(models.Model):
         ('high', 'High'),
     ]
 
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
     title = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
 

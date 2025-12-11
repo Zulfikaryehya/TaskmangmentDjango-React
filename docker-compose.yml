@@ -112,6 +112,8 @@ services:
     
     environment:
       - CHOKIDAR_USEPOLLING=true     # Enable file watching on Windows
+      - WATCHPACK_POLLING=true       # Webpack polling for Windows
+      - FAST_REFRESH=true            # Enable Fast Refresh
       - REACT_APP_API_URL=http://localhost:8000/api
     
     depends_on:

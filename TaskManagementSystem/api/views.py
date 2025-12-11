@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .models import Task
-from .serializer import TaskSerializer, RegisterSerializer
+from .serializer import TaskSerializer, RegisterSerializer, ProfileSerializer
 from rest_framework.permissions import IsAuthenticated
 from .logs.utils import log_activity
 # Create your views here.
@@ -100,4 +100,30 @@ class RegisterView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({"message": "User created"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        profile = request.user.profile  # pylint: disable=no-member
+        profile_data = {
+            "username": request.user.username,
+            "email": request.user.email,
+            "phone": profile.phone,
+            "bio": profile.bio,
+            "role": profile.role,
+        }
+        return Response(profile_data)
+
+    def patch(self, request):
+        profile = request.user.profile  # pylint: disable=no-member
+        serializer = ProfileSerializer(
+            profile, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
