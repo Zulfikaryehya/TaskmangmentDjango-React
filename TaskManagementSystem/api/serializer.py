@@ -1,3 +1,4 @@
+from .models import Team, TeamMembership
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Task, Profile
@@ -31,7 +32,7 @@ class ProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Profile
-        fields = ['username', 'email', 'phone', 'bio', 'role']
+        fields = ['username', 'email', 'phone', 'bio', ]
         read_only_fields = ['username', 'email']
 
     def validate_phone(self, value):
@@ -41,10 +42,25 @@ class ProfileSerializer(serializers.ModelSerializer):
                 "Phone number must be at least 10 digits")
         return value
 
-    def validate_role(self, value):
-        """Custom validation for role"""
-        valid_roles = ['leader', 'member']
-        if value not in valid_roles:
-            raise serializers.ValidationError(
-                f"Role must be one of {', '.join(valid_roles)}")
         return value
+
+
+class TeamCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = ['id', 'name', 'description']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+
+        # Create team
+        team = Team.objects.create(  # pylint: disable=no-member
+            **validated_data)
+        # Add creator as a member (owner)
+        TeamMembership.objects.create(   # pylint: disable=no-member
+            user=user,
+            team=team,
+            role_in_team="owner"
+        )
+
+        return team

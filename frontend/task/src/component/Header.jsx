@@ -1,122 +1,360 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../api/axios';
-import { FaPlus, FaFilter, FaClipboardList, FaSignOutAlt, FaUser, FaTasks } from 'react-icons/fa';
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  Box,
+  Container,
+  IconButton,
+  useMediaQuery,
+  useTheme,
+  Tooltip,
+  Stack,
+  Chip,
+  InputLabel,
+} from "@mui/material";
+import {
+  Add as AddIcon,
+  FilterList as FilterIcon,
+  Assignment as LogsIcon,
+  ExitToApp as LogoutIcon,
+  AccountCircle as ProfileIcon,
+  Task as TaskIcon,
+  Group as GroupIcon,
+} from "@mui/icons-material";
+import api from "../api/axios";
 
-export default function Header({ statusFilter, setStatusFilter, handleLogout }) {
-    const navigate = useNavigate();
-    const [isSuperuser, setIsSuperuser] = useState(false);
+export default function Header({
+  statusFilter,
+  setStatusFilter,
+  handleLogout,
+}) {
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  const [isSuperuser, setIsSuperuser] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        // Check if user is superuser
-        const checkSuperuser = async () => {
-            try {
-                const token = localStorage.getItem("access_token");
-                const response = await api.get('check-superuser/', {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                setIsSuperuser(response.data.is_superuser);
-            } catch (error) {
-                console.error('Error checking superuser status:', error);
-                setIsSuperuser(false);
-            }
-        };
-        checkSuperuser();
-    }, []);
+  // Memoized function to check superuser status
+  const checkSuperuser = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setIsSuperuser(false);
+        return;
+      }
 
-    const handleLogoutClick = () => {
-        if (handleLogout) {
-            handleLogout();
-        } else {
-            localStorage.removeItem("access_token");
-            localStorage.removeItem("refresh_token");
-            navigate("/login");
-        }
-    };
+      const response = await api.get("check-superuser/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setIsSuperuser(response.data.is_superuser);
+    } catch (error) {
+      console.error("Error checking superuser status:", error);
+      setIsSuperuser(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-    return (   
-      <header className="bg-gradient-to-r from-blue-600 to-indigo-700 shadow-lg sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            {/* Logo/Brand Section */}
-            <div className="flex items-center space-x-3">
-              <div className="bg-white bg-opacity-20 p-2 rounded-lg backdrop-blur-sm">
-                <FaTasks className="text-white text-2xl" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Task Manager</h1>
-                <p className="text-blue-100 text-xs">Stay organized, stay productive</p>
-              </div>
-            </div>
+  useEffect(() => {
+    checkSuperuser();
+  }, [checkSuperuser]);
 
-            {/* Actions Section */}
-            <div className="flex gap-3 items-center">
-              {/* Filter Dropdown */}
-              <div className="relative">
-                <div className="flex items-center bg-white bg-opacity-10 backdrop-blur-md rounded-lg px-4 py-2 border border-white border-opacity-20">
-                  <FaFilter className="text-white text-sm mr-2" />
-                  <select
-                    id="statusFilter"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="bg-transparent text-white font-medium focus:outline-none cursor-pointer appearance-none pr-8"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 0.5rem center',
-                      backgroundSize: '1.5em 1.5em',
+  // Memoized logout handler
+  const handleLogoutClick = useCallback(() => {
+    if (handleLogout) {
+      handleLogout();
+    } else {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      navigate("/login");
+    }
+  }, [handleLogout, navigate]);
+
+  // Navigation handlers
+  const handleCreateTask = useCallback(
+    () => navigate("/create-task"),
+    [navigate]
+  );
+  const handleViewLogs = useCallback(() => navigate("/logs"), [navigate]);
+  const handleViewProfile = useCallback(
+    () => navigate("/user-profile"),
+    [navigate]
+  );
+  const handleViewTeams = useCallback(() => navigate("/teams"), [navigate]);
+
+  return (
+    <AppBar
+      position="sticky"
+      elevation={4}
+      sx={{
+        background: "linear-gradient(90deg, #1976d2 0%, #5e35b1 100%)",
+      }}
+    >
+      <Container maxWidth="xl">
+        <Toolbar disableGutters sx={{ py: 1, gap: 2 }}>
+          {/* Logo/Brand Section */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.5,
+              flexGrow: 1,
+            }}
+          >
+            <Box
+              sx={{
+                backgroundColor: "rgba(255, 255, 255, 0.2)",
+                p: 1,
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                backdropFilter: "blur(10px)",
+              }}
+            >
+              <TaskIcon sx={{ fontSize: 28, color: "white" }} />
+            </Box>
+            <Box sx={{ display: { xs: "none", sm: "block" } }}>
+              <Typography
+                variant="h6"
+                component="h1"
+                sx={{
+                  fontWeight: 700,
+                  color: "white",
+                  letterSpacing: "-0.5px",
+                }}
+              >
+                Task Manager
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  color: "rgba(255, 255, 255, 0.8)",
+                  fontSize: "0.7rem",
+                }}
+              >
+                Stay organized, stay productive
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Actions Section */}
+          <Stack direction="row" spacing={1} alignItems="center">
+            {/* Filter Dropdown */}
+            <FormControl
+              size="small"
+              sx={{
+                minWidth: isMobile ? 100 : 130,
+                backgroundColor: "rgba(255, 255, 255, 0.15)",
+                borderRadius: 1,
+                backdropFilter: "blur(10px)",
+                "& .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "rgba(255, 255, 255, 0.3)",
+                },
+                "&:hover .MuiOutlinedInput-notchedOutline": {
+                  borderColor: "rgba(255, 255, 255, 0.5)",
+                },
+              }}
+            >
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                displayEmpty
+                startAdornment={
+                  <FilterIcon sx={{ mr: 0.5, fontSize: 18, color: "white" }} />
+                }
+                sx={{
+                  color: "white",
+                  "& .MuiSelect-icon": { color: "white" },
+                  fontSize: "0.875rem",
+                }}
+              >
+                <MenuItem value="">All Tasks</MenuItem>
+                <MenuItem value="pending">Pending</MenuItem>
+                <MenuItem value="completed">Completed</MenuItem>
+              </Select>
+            </FormControl>
+
+            {/* New Task Button */}
+            <Tooltip title="Create new task" arrow>
+              <Button
+                variant="contained"
+                color="success"
+                startIcon={!isMobile && <AddIcon />}
+                onClick={handleCreateTask}
+                sx={{
+                  fontWeight: 600,
+                  textTransform: "none",
+                  boxShadow: 2,
+                  "&:hover": {
+                    transform: "scale(1.05)",
+                    boxShadow: 4,
+                  },
+                  transition: "all 0.2s",
+                  minWidth: isMobile ? 40 : "auto",
+                  px: isMobile ? 1 : 2,
+                }}
+              >
+                {isMobile ? <AddIcon /> : "New Task"}
+              </Button>
+            </Tooltip>
+
+            {/* View Logs Button - Only for superusers */}
+            {!loading && isSuperuser && (
+              <Tooltip title="View logs" arrow>
+                {isTablet ? (
+                  <IconButton
+                    onClick={handleViewLogs}
+                    sx={{
+                      color: "white",
+                      backgroundColor: "rgba(255, 255, 255, 0.15)",
+                      backdropFilter: "blur(10px)",
+                      "&:hover": {
+                        backgroundColor: "rgba(255, 255, 255, 0.25)",
+                        transform: "scale(1.05)",
+                      },
+                      transition: "all 0.2s",
                     }}
                   >
-                    <option value="" className="bg-gray-800 text-white">All Tasks</option>
-                    <option value="pending" className="bg-gray-800 text-white">Pending</option>
-                    <option value="completed" className="bg-gray-800 text-white">Completed</option>
-                  </select>
-                </div>
-              </div>
+                    <LogsIcon />
+                  </IconButton>
+                ) : (
+                  <Button
+                    variant="outlined"
+                    startIcon={<LogsIcon />}
+                    onClick={handleViewLogs}
+                    sx={{
+                      color: "white",
+                      borderColor: "rgba(255, 255, 255, 0.3)",
+                      backgroundColor: "rgba(255, 255, 255, 0.15)",
+                      backdropFilter: "blur(10px)",
+                      textTransform: "none",
+                      fontWeight: 600,
+                      "&:hover": {
+                        borderColor: "rgba(255, 255, 255, 0.5)",
+                        backgroundColor: "rgba(255, 255, 255, 0.25)",
+                        transform: "scale(1.05)",
+                      },
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    Logs
+                  </Button>
+                )}
+              </Tooltip>
+            )}
 
-              {/* New Task Button */}
-              <button
-                onClick={() => navigate("/create-task")}
-                className="bg-green-500 hover:bg-green-600 text-white font-semibold px-5 py-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-xl flex items-center gap-2 border-2 border-green-400"
-              >
-                <FaPlus className="text-sm" />
-                <span className="hidden sm:inline">New Task</span>
-              </button>
-
-              {/* View Logs Button - Only for superusers */}
-              {isSuperuser && (
-                <button
-                  onClick={() => navigate("/logs")}
-                  className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold px-5 py-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 backdrop-blur-md border border-white border-opacity-30 flex items-center gap-2"
+            {/* Teams Button */}
+            <Tooltip title="View teams" arrow>
+              {isTablet ? (
+                <IconButton
+                  onClick={handleViewTeams}
+                  sx={{
+                    color: "white",
+                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                    backdropFilter: "blur(10px)",
+                    "&:hover": {
+                      backgroundColor: "rgba(255, 255, 255, 0.25)",
+                      transform: "scale(1.05)",
+                    },
+                    transition: "all 0.2s",
+                  }}
                 >
-                  <FaClipboardList className="text-sm" />
-                  <span className="hidden md:inline">Logs</span>
-                </button>
+                  <GroupIcon />
+                </IconButton>
+              ) : (
+                <Button
+                  variant="outlined"
+                  startIcon={<GroupIcon />}
+                  onClick={handleViewTeams}
+                  sx={{
+                    color: "white",
+                    borderColor: "rgba(255, 255, 255, 0.3)",
+                    backgroundColor: "rgba(255, 255, 255, 0.15)",
+                    backdropFilter: "blur(10px)",
+                    textTransform: "none",
+                    fontWeight: 600,
+                    "&:hover": {
+                      borderColor: "rgba(255, 255, 255, 0.5)",
+                      backgroundColor: "rgba(255, 255, 255, 0.25)",
+                      transform: "scale(1.05)",
+                    },
+                    transition: "all 0.2s",
+                  }}
+                >
+                  Teams
+                </Button>
               )}
+            </Tooltip>
 
-              {/* User Profile Button */}
-              <button
-                onClick={() => navigate("/user-profile")}
-                className="bg-white bg-opacity-20 hover:bg-opacity-30 text-white font-semibold px-5 py-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 backdrop-blur-md border border-white border-opacity-30 flex items-center gap-2"
-                title="View Profile"
+            {/* User Profile Button */}
+            <Tooltip title="View profile" arrow>
+              <IconButton
+                onClick={handleViewProfile}
+                sx={{
+                  color: "white",
+                  backgroundColor: "rgba(255, 255, 255, 0.15)",
+                  backdropFilter: "blur(10px)",
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.25)",
+                    transform: "scale(1.05)",
+                  },
+                  transition: "all 0.2s",
+                }}
               >
-                <FaUser className="text-sm" />
-                <span className="hidden md:inline">Profile</span>
-              </button>
+                <ProfileIcon />
+              </IconButton>
+            </Tooltip>
 
-              {/* Logout Button */}
-              <button 
-                onClick={handleLogoutClick}
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold px-5 py-2.5 rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-xl flex items-center gap-2 border-2 border-red-400"
-                title="Logout"
-              >
-                <FaSignOutAlt className="text-sm" />
-                <span className="hidden sm:inline">Logout</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>);
+            {/* Logout Button */}
+            <Tooltip title="Logout" arrow>
+              {isMobile ? (
+                <IconButton
+                  onClick={handleLogoutClick}
+                  sx={{
+                    color: "white",
+                    backgroundColor: "error.main",
+                    "&:hover": {
+                      backgroundColor: "error.dark",
+                      transform: "scale(1.05)",
+                    },
+                    transition: "all 0.2s",
+                  }}
+                >
+                  <LogoutIcon />
+                </IconButton>
+              ) : (
+                <Button
+                  variant="contained"
+                  color="error"
+                  startIcon={<LogoutIcon />}
+                  onClick={handleLogoutClick}
+                  sx={{
+                    fontWeight: 600,
+                    textTransform: "none",
+                    boxShadow: 2,
+                    "&:hover": {
+                      transform: "scale(1.05)",
+                      boxShadow: 4,
+                    },
+                    transition: "all 0.2s",
+                  }}
+                >
+                  Logout
+                </Button>
+              )}
+            </Tooltip>
+          </Stack>
+        </Toolbar>
+      </Container>
+    </AppBar>
+  );
 }

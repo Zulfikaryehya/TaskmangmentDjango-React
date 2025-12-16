@@ -10,15 +10,18 @@ import EditTaskPage from './pages/EditPage';
 import LogsPage from './pages/LogsPage';
 import SuperuserRoute from './component/SuperuserRoute';
 import UserProfilePage from './pages/UserProfilePage';
+import TeamsManagementPage from './pages/TeamsManagementPage';
+
 const router = createBrowserRouter ([
     {path: "/", element: <LoginPage />},
   {path: "/login", element: <LoginPage />},
   {path: "/register", element: <RegisterPage/>},
-  {path: "/tasks", element: <TasksPage />},
+  {path: "/home", element: <TasksPage />},
   {path: "/create-task", element: <CreateTasksPage />},
   {path: "/tasks/:id/edit", element: <EditTaskPage />},
   {path : "logs", element: <SuperuserRoute><LogsPage /></SuperuserRoute>},
   {path : "user-profile", element: <UserProfilePage />},
+  {path : "teams", element: <TeamsManagementPage />},
 ]);
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
