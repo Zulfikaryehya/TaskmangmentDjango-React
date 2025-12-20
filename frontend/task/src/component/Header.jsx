@@ -1,45 +1,51 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   AppBar,
   Toolbar,
   Typography,
   Button,
-  Select,
-  MenuItem,
-  FormControl,
   Box,
   Container,
-  IconButton,
   useMediaQuery,
   useTheme,
-  Tooltip,
-  Stack,
-  Chip,
-  InputLabel,
+  Tabs,
+  Tab,
 } from "@mui/material";
 import {
   Add as AddIcon,
-  FilterList as FilterIcon,
   Assignment as LogsIcon,
   ExitToApp as LogoutIcon,
   AccountCircle as ProfileIcon,
-  Task as TaskIcon,
+  Home as HomeIcon,
   Group as GroupIcon,
 } from "@mui/icons-material";
 import api from "../api/axios";
 
-export default function Header({
-  statusFilter,
-  setStatusFilter,
-  handleLogout,
-}) {
+export default function Header({ handleLogout }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [isSuperuser, setIsSuperuser] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [currentTab, setCurrentTab] = useState(0);
+
+  // Determine current tab based on location
+  useEffect(() => {
+    const path = location.pathname;
+    if (path === "/tasks" || path === "/") {
+      setCurrentTab(0);
+    } else if (path === "/teams") {
+      setCurrentTab(1);
+    } else if (path === "/create-task") {
+      setCurrentTab(2);
+    } else if (path === "/user-profile") {
+      setCurrentTab(3);
+    } else if (path === "/logs") {
+      setCurrentTab(4);
+    }
+  }, [location]);
 
   // Memoized function to check superuser status
   const checkSuperuser = useCallback(async () => {
@@ -80,280 +86,156 @@ export default function Header({
   }, [handleLogout, navigate]);
 
   // Navigation handlers
-  const handleCreateTask = useCallback(
-    () => navigate("/create-task"),
-    [navigate]
-  );
-  const handleViewLogs = useCallback(() => navigate("/logs"), [navigate]);
-  const handleViewProfile = useCallback(
-    () => navigate("/user-profile"),
-    [navigate]
-  );
-  const handleViewTeams = useCallback(() => navigate("/teams"), [navigate]);
+  const handleTabChange = (event, newValue) => {
+    setCurrentTab(newValue);
+    switch (newValue) {
+      case 0:
+        navigate("/home");
+        break;
+      case 1:
+        navigate("/teams");
+        break;
+      case 2:
+        navigate("/create-task");
+        break;
+      case 3:
+        navigate("/user-profile");
+        break;
+      case 4:
+        navigate("/logs");
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
     <AppBar
       position="sticky"
-      elevation={4}
+      elevation={1}
       sx={{
-        background: "linear-gradient(90deg, #1976d2 0%, #5e35b1 100%)",
+        backgroundColor: "white",
+        color: "text.primary",
       }}
     >
       <Container maxWidth="xl">
-        <Toolbar disableGutters sx={{ py: 1, gap: 2 }}>
+        <Toolbar disableGutters sx={{ justifyContent: "space-between" }}>
           {/* Logo/Brand Section */}
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1.5,
-              flexGrow: 1,
+              gap: 1,
+              cursor: "pointer",
             }}
+            onClick={() => navigate("/tasks")}
           >
             <Box
               sx={{
-                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                p: 1,
-                borderRadius: 2,
                 display: "flex",
                 alignItems: "center",
-                backdropFilter: "blur(10px)",
+                justifyContent: "center",
+                width: 40,
+                height: 40,
+                borderRadius: 1,
+                background: "linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)",
               }}
             >
-              <TaskIcon sx={{ fontSize: 28, color: "white" }} />
+              <HomeIcon sx={{ fontSize: 24, color: "white" }} />
             </Box>
-            <Box sx={{ display: { xs: "none", sm: "block" } }}>
+            {!isMobile && (
               <Typography
                 variant="h6"
                 component="h1"
                 sx={{
                   fontWeight: 700,
-                  color: "white",
+                  color: "text.primary",
                   letterSpacing: "-0.5px",
                 }}
               >
                 Task Manager
               </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  color: "rgba(255, 255, 255, 0.8)",
-                  fontSize: "0.7rem",
-                }}
-              >
-                Stay organized, stay productive
-              </Typography>
-            </Box>
+            )}
           </Box>
 
-          {/* Actions Section */}
-          <Stack direction="row" spacing={1} alignItems="center">
-            {/* Filter Dropdown */}
-            <FormControl
-              size="small"
+          {/* Navigation Tabs */}
+          {!isMobile ? (
+            <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+              <Tabs
+                value={currentTab}
+                onChange={handleTabChange}
+                textColor="primary"
+                indicatorColor="primary"
+                sx={{
+                  "& .MuiTab-root": {
+                    textTransform: "none",
+                    fontWeight: 500,
+                    fontSize: "1rem",
+                    minWidth: 100,
+                  },
+                }}
+              >
+                <Tab icon={<HomeIcon />} iconPosition="start" label="Home" />
+                <Tab icon={<GroupIcon />} iconPosition="start" label="Teams" />
+                <Tab icon={<AddIcon />} iconPosition="start" label="New Task" />
+                <Tab icon={<ProfileIcon />} iconPosition="start" label="Profile" />
+                {!loading && isSuperuser && (
+                  <Tab icon={<LogsIcon />} iconPosition="start" label="Logs" />
+                )}
+              </Tabs>
+            </Box>
+          ) : (
+            <Box sx={{ flexGrow: 1 }} />
+          )}
+
+          {/* Logout Button */}
+          <Button
+            variant="outlined"
+            color="error"
+            startIcon={<LogoutIcon />}
+            onClick={handleLogoutClick}
+            sx={{
+              textTransform: "none",
+              fontWeight: 600,
+              borderWidth: 2,
+              "&:hover": {
+                borderWidth: 2,
+              },
+            }}
+          >
+            {!isMobile && "Logout"}
+            {isMobile && <LogoutIcon />}
+          </Button>
+        </Toolbar>
+
+        {/* Mobile Navigation */}
+        {isMobile && (
+          <Box sx={{ borderTop: 1, borderColor: "divider" }}>
+            <Tabs
+              value={currentTab}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              textColor="primary"
+              indicatorColor="primary"
               sx={{
-                minWidth: isMobile ? 100 : 130,
-                backgroundColor: "rgba(255, 255, 255, 0.15)",
-                borderRadius: 1,
-                backdropFilter: "blur(10px)",
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(255, 255, 255, 0.3)",
-                },
-                "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "rgba(255, 255, 255, 0.5)",
+                "& .MuiTab-root": {
+                  textTransform: "none",
+                  fontWeight: 500,
+                  minWidth: 80,
                 },
               }}
             >
-              <Select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                displayEmpty
-                startAdornment={
-                  <FilterIcon sx={{ mr: 0.5, fontSize: 18, color: "white" }} />
-                }
-                sx={{
-                  color: "white",
-                  "& .MuiSelect-icon": { color: "white" },
-                  fontSize: "0.875rem",
-                }}
-              >
-                <MenuItem value="">All Tasks</MenuItem>
-                <MenuItem value="pending">Pending</MenuItem>
-                <MenuItem value="completed">Completed</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* New Task Button */}
-            <Tooltip title="Create new task" arrow>
-              <Button
-                variant="contained"
-                color="success"
-                startIcon={!isMobile && <AddIcon />}
-                onClick={handleCreateTask}
-                sx={{
-                  fontWeight: 600,
-                  textTransform: "none",
-                  boxShadow: 2,
-                  "&:hover": {
-                    transform: "scale(1.05)",
-                    boxShadow: 4,
-                  },
-                  transition: "all 0.2s",
-                  minWidth: isMobile ? 40 : "auto",
-                  px: isMobile ? 1 : 2,
-                }}
-              >
-                {isMobile ? <AddIcon /> : "New Task"}
-              </Button>
-            </Tooltip>
-
-            {/* View Logs Button - Only for superusers */}
-            {!loading && isSuperuser && (
-              <Tooltip title="View logs" arrow>
-                {isTablet ? (
-                  <IconButton
-                    onClick={handleViewLogs}
-                    sx={{
-                      color: "white",
-                      backgroundColor: "rgba(255, 255, 255, 0.15)",
-                      backdropFilter: "blur(10px)",
-                      "&:hover": {
-                        backgroundColor: "rgba(255, 255, 255, 0.25)",
-                        transform: "scale(1.05)",
-                      },
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    <LogsIcon />
-                  </IconButton>
-                ) : (
-                  <Button
-                    variant="outlined"
-                    startIcon={<LogsIcon />}
-                    onClick={handleViewLogs}
-                    sx={{
-                      color: "white",
-                      borderColor: "rgba(255, 255, 255, 0.3)",
-                      backgroundColor: "rgba(255, 255, 255, 0.15)",
-                      backdropFilter: "blur(10px)",
-                      textTransform: "none",
-                      fontWeight: 600,
-                      "&:hover": {
-                        borderColor: "rgba(255, 255, 255, 0.5)",
-                        backgroundColor: "rgba(255, 255, 255, 0.25)",
-                        transform: "scale(1.05)",
-                      },
-                      transition: "all 0.2s",
-                    }}
-                  >
-                    Logs
-                  </Button>
-                )}
-              </Tooltip>
-            )}
-
-            {/* Teams Button */}
-            <Tooltip title="View teams" arrow>
-              {isTablet ? (
-                <IconButton
-                  onClick={handleViewTeams}
-                  sx={{
-                    color: "white",
-                    backgroundColor: "rgba(255, 255, 255, 0.15)",
-                    backdropFilter: "blur(10px)",
-                    "&:hover": {
-                      backgroundColor: "rgba(255, 255, 255, 0.25)",
-                      transform: "scale(1.05)",
-                    },
-                    transition: "all 0.2s",
-                  }}
-                >
-                  <GroupIcon />
-                </IconButton>
-              ) : (
-                <Button
-                  variant="outlined"
-                  startIcon={<GroupIcon />}
-                  onClick={handleViewTeams}
-                  sx={{
-                    color: "white",
-                    borderColor: "rgba(255, 255, 255, 0.3)",
-                    backgroundColor: "rgba(255, 255, 255, 0.15)",
-                    backdropFilter: "blur(10px)",
-                    textTransform: "none",
-                    fontWeight: 600,
-                    "&:hover": {
-                      borderColor: "rgba(255, 255, 255, 0.5)",
-                      backgroundColor: "rgba(255, 255, 255, 0.25)",
-                      transform: "scale(1.05)",
-                    },
-                    transition: "all 0.2s",
-                  }}
-                >
-                  Teams
-                </Button>
+              <Tab icon={<HomeIcon />} label="Home" />
+              <Tab icon={<GroupIcon />} label="Teams" />
+              <Tab icon={<AddIcon />} label="New Task" />
+              <Tab icon={<ProfileIcon />} label="Profile" />
+              {!loading && isSuperuser && (
+                <Tab icon={<LogsIcon />} label="Logs" />
               )}
-            </Tooltip>
-
-            {/* User Profile Button */}
-            <Tooltip title="View profile" arrow>
-              <IconButton
-                onClick={handleViewProfile}
-                sx={{
-                  color: "white",
-                  backgroundColor: "rgba(255, 255, 255, 0.15)",
-                  backdropFilter: "blur(10px)",
-                  "&:hover": {
-                    backgroundColor: "rgba(255, 255, 255, 0.25)",
-                    transform: "scale(1.05)",
-                  },
-                  transition: "all 0.2s",
-                }}
-              >
-                <ProfileIcon />
-              </IconButton>
-            </Tooltip>
-
-            {/* Logout Button */}
-            <Tooltip title="Logout" arrow>
-              {isMobile ? (
-                <IconButton
-                  onClick={handleLogoutClick}
-                  sx={{
-                    color: "white",
-                    backgroundColor: "error.main",
-                    "&:hover": {
-                      backgroundColor: "error.dark",
-                      transform: "scale(1.05)",
-                    },
-                    transition: "all 0.2s",
-                  }}
-                >
-                  <LogoutIcon />
-                </IconButton>
-              ) : (
-                <Button
-                  variant="contained"
-                  color="error"
-                  startIcon={<LogoutIcon />}
-                  onClick={handleLogoutClick}
-                  sx={{
-                    fontWeight: 600,
-                    textTransform: "none",
-                    boxShadow: 2,
-                    "&:hover": {
-                      transform: "scale(1.05)",
-                      boxShadow: 4,
-                    },
-                    transition: "all 0.2s",
-                  }}
-                >
-                  Logout
-                </Button>
-              )}
-            </Tooltip>
-          </Stack>
-        </Toolbar>
+            </Tabs>
+          </Box>
+        )}
       </Container>
     </AppBar>
   );

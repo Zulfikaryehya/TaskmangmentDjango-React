@@ -100,7 +100,7 @@ export default function TeamsManagementPage() {
   };
 
   const handleViewDetails = (teamId) => {
-    navigate(`/teams/${teamId}`);
+    navigate(`/teams/${teamId}/details`);
   };
 
   // Filter users based on search query

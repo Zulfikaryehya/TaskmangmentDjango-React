@@ -1,6 +1,32 @@
 import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+    Container,
+    TextField,
+    Button,
+    Typography,
+    Box,
+    MenuItem,
+    Select,
+    FormControl,
+    Alert,
+    Grid,
+    Paper,
+    Chip,
+    Divider,
+    Stack,
+    CircularProgress,
+} from "@mui/material";
+import {
+    Edit as EditIcon,
+    Title as TitleIcon,
+    Description,
+    CalendarMonth,
+    Flag,
+    CheckCircle,
+    ArrowBack,
+} from "@mui/icons-material";
 
 export default function EditTaskPage() {
     const { id } = useParams(); // Get task ID from URL
@@ -44,7 +70,7 @@ export default function EditTaskPage() {
                 if (err.response?.status === 403 || err.response?.status === 404) {
                     setNotAuthorized(true);
                     setTimeout(() => {
-                        navigate("/tasks");
+                        navigate("/home");
                     }, 2000); // Redirect after 2 seconds
                 } else {
                     setError("Failed to load task. Please try again.");
@@ -83,112 +109,385 @@ export default function EditTaskPage() {
                 },
             }
         )
-        alert("Task updated successfully!");
-        navigate("/tasks");
+        navigate("/home");
         console.log("Task updated successfully:", response.data);
     }catch (err) {
         setError("Failed to update task. Please try again.");
         console.log(err);
     }}
 
+    const getPriorityColor = () => {
+        switch (priority) {
+            case "high":
+                return "error";
+            case "medium":
+                return "warning";
+            case "low":
+                return "success";
+            default:
+                return "default";
+        }
+    };
+
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-100">
-                <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading task...</p>
-                </div>
-            </div>
+            <Box
+                sx={{
+                    minHeight: "100vh",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: "#f5f5f5",
+                }}
+            >
+                <Box sx={{ textAlign: "center" }}>
+                    <CircularProgress size={60} />
+                    <Typography variant="h6" sx={{ mt: 2 }} color="text.secondary">
+                        Loading task...
+                    </Typography>
+                </Box>
+            </Box>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-            <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-lg">
-                <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">Edit Task</h2>
-                {error && <p className="text-red-500 text-sm mb-4 text-center">{error}</p>}
-                <form onSubmit={handleUpdateTask} className="space-y-4">
-                    <div>
-                        <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                        <input
-                            id="title"
-                            type="text"
-                            placeholder="Title"
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                        <textarea
-                            id="description"
-                            placeholder="Description"
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"  
-                            required
-                        />
-                    </div>
-                
-                    <div>
-                        <label htmlFor="dueDate" className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
-                        <input
-                            id="dueDate"
-                            type="date"
-                            value={dueDate}
-                            onChange={(e) => setDueDate(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                        <select
-                            id="status"
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
+        <Box
+            sx={{
+                minHeight: "100vh",
+                backgroundColor: "#f5f5f5",
+                py: 4,
+                px: 2,
+            }}
+        >
+            <Container maxWidth="lg">
+                {/* Header Section */}
+                <Box sx={{ mb: 3 }}>
+                    <Button
+                        startIcon={<ArrowBack />}
+                        onClick={() => navigate("/home")}
+                        sx={{
+                            mb: 2,
+                        }}
+                    >
+                        Back to Tasks
+                    </Button>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                        <EditIcon sx={{ fontSize: 40, color: "primary.main" }} />
+                        <Box>
+                            <Typography
+                                variant="h4"
+                                component="h1"
+                                fontWeight="bold"
+                            >
+                                Edit Task
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Update the task details below
+                            </Typography>
+                        </Box>
+                    </Box>
+                </Box>
+
+                <Grid container spacing={3}>
+                    {/* Main Form */}
+                    <Grid item xs={12} md={8}>
+                        <Paper
+                            elevation={2}
+                            sx={{
+                                p: 4,
+                                borderRadius: 2,
+                                backgroundColor: "white",
+                            }}
                         >
-                            <option value="pending">Pending</option>
-                            {/* <option value="in_progress">In Progress</option> */}
-                            <option value="completed">Completed</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label htmlFor="priority" className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                        <select
-                            id="priority"
-                            value={priority}
-                            onChange={(e) => setPriority(e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            required
+                            {error && (
+                                <Alert
+                                    severity="error"
+                                    sx={{ mb: 3 }}
+                                    onClose={() => setError("")}
+                                >
+                                    {error}
+                                </Alert>
+                            )}
+
+                            {notAuthorized && (
+                                <Alert severity="warning" sx={{ mb: 3 }}>
+                                    You are not authorized to edit this task. Redirecting...
+                                </Alert>
+                            )}
+
+                            <Box component="form" onSubmit={handleUpdateTask}>
+                                <Stack spacing={3}>
+                                    {/* Title Field */}
+                                    <Box>
+                                        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                                            <TitleIcon sx={{ mr: 1, color: "primary.main" }} />
+                                            <Typography variant="subtitle2" fontWeight="bold">
+                                                Task Title
+                                            </Typography>
+                                        </Box>
+                                        <TextField
+                                            fullWidth
+                                            variant="outlined"
+                                            value={title}
+                                            onChange={(e) => setTitle(e.target.value)}
+                                            required
+                                            placeholder="Enter a descriptive task title"
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    "&:hover fieldset": {
+                                                        borderColor: "primary.main",
+                                                    },
+                                                },
+                                            }}
+                                        />
+                                    </Box>
+
+                                    {/* Description Field */}
+                                    <Box>
+                                        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                                            <Description sx={{ mr: 1, color: "primary.main" }} />
+                                            <Typography variant="subtitle2" fontWeight="bold">
+                                                Description
+                                            </Typography>
+                                        </Box>
+                                        <TextField
+                                            fullWidth
+                                            variant="outlined"
+                                            multiline
+                                            rows={5}
+                                            value={description}
+                                            onChange={(e) => setDescription(e.target.value)}
+                                            required
+                                            placeholder="Provide detailed information about the task..."
+                                            sx={{
+                                                "& .MuiOutlinedInput-root": {
+                                                    "&:hover fieldset": {
+                                                        borderColor: "primary.main",
+                                                    },
+                                                },
+                                            }}
+                                        />
+                                    </Box>
+
+                                    <Divider />
+
+                                    {/* Date, Priority, Status Row */}
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} sm={4}>
+                                            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                                                <CalendarMonth sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
+                                                <Typography variant="subtitle2" fontWeight="bold">
+                                                    Due Date
+                                                </Typography>
+                                            </Box>
+                                            <TextField
+                                                fullWidth
+                                                type="date"
+                                                variant="outlined"
+                                                value={dueDate}
+                                                onChange={(e) => setDueDate(e.target.value)}
+                                                required
+                                                InputLabelProps={{
+                                                    shrink: true,
+                                                }}
+                                            />
+                                        </Grid>
+
+                                        <Grid item xs={12} sm={4}>
+                                            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                                                <Flag sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
+                                                <Typography variant="subtitle2" fontWeight="bold">
+                                                    Priority
+                                                </Typography>
+                                            </Box>
+                                            <FormControl fullWidth required>
+                                                <Select
+                                                    value={priority}
+                                                    onChange={(e) => setPriority(e.target.value)}
+                                                    sx={{
+                                                        "& .MuiOutlinedInput-notchedOutline": {
+                                                            borderColor: `${getPriorityColor()}.main`,
+                                                        },
+                                                    }}
+                                                >
+                                                    <MenuItem value="low">
+                                                        <Chip label="Low" size="small" color="success" />
+                                                    </MenuItem>
+                                                    <MenuItem value="medium">
+                                                        <Chip label="Medium" size="small" color="warning" />
+                                                    </MenuItem>
+                                                    <MenuItem value="high">
+                                                        <Chip label="High" size="small" color="error" />
+                                                    </MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </Grid>
+
+                                        <Grid item xs={12} sm={4}>
+                                            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                                                <CheckCircle sx={{ mr: 1, color: "primary.main", fontSize: 20 }} />
+                                                <Typography variant="subtitle2" fontWeight="bold">
+                                                    Status
+                                                </Typography>
+                                            </Box>
+                                            <FormControl fullWidth required>
+                                                <Select
+                                                    value={status}
+                                                    onChange={(e) => setStatus(e.target.value)}
+                                                >
+                                                    <MenuItem value="pending">Pending</MenuItem>
+                                                    <MenuItem value="completed">Completed</MenuItem>
+                                                </Select>
+                                            </FormControl>
+                                        </Grid>
+                                    </Grid>
+
+                                    <Divider sx={{ my: 2 }} />
+
+                                    {/* Action Buttons */}
+                                    <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", pt: 2 }}>
+                                        <Button
+                                            variant="outlined"
+                                            size="large"
+                                            onClick={() => navigate("/home")}
+                                            sx={{
+                                                minWidth: 120,
+                                                borderWidth: 2,
+                                                "&:hover": {
+                                                    borderWidth: 2,
+                                                },
+                                            }}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            variant="contained"
+                                            size="large"
+                                            startIcon={<EditIcon />}
+                                            sx={{
+                                                minWidth: 180,
+                                            }}
+                                        >
+                                            Update Task
+                                        </Button>
+                                    </Box>
+                                </Stack>
+                            </Box>
+                        </Paper>
+                    </Grid>
+
+                    {/* Info Sidebar */}
+                    <Grid item xs={12} md={4}>
+                        <Paper
+                            elevation={2}
+                            sx={{
+                                p: 3,
+                                borderRadius: 2,
+                                backgroundColor: "white",
+                            }}
                         >
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                        </select>
-                    </div>
-                    <div className="flex gap-4">
-                        <button
-                            type="button"
-                            onClick={() => navigate("/tasks")}
-                            className="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition duration-200 font-semibold"
+                            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                Edit Tips
+                            </Typography>
+                            <Divider sx={{ mb: 2 }} />
+                            <Stack spacing={2}>
+                                <Box>
+                                    <Typography variant="subtitle2" fontWeight="bold" color="primary" gutterBottom>
+                                        ✏️ Update Carefully
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Review all changes before saving to ensure accuracy.
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="subtitle2" fontWeight="bold" color="primary" gutterBottom>
+                                        🔄 Status Changes
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Update the status to reflect current progress on the task.
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="subtitle2" fontWeight="bold" color="primary" gutterBottom>
+                                        ⚡ Priority Adjustment
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Change priority as circumstances evolve and urgency shifts.
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="subtitle2" fontWeight="bold" color="primary" gutterBottom>
+                                        📅 Deadline Extension
+                                    </Typography>
+                                    <Typography variant="body2" color="text.secondary">
+                                        Adjust due dates if needed, but communicate changes to your team.
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </Paper>
+
+                        {/* Current Task Info */}
+                        <Paper
+                            elevation={2}
+                            sx={{
+                                p: 3,
+                                borderRadius: 2,
+                                mt: 3,
+                                backgroundColor: "primary.main",
+                                color: "white",
+                            }}
                         >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition duration-200 font-semibold"
-                        >
-                            Update Task
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                            <Typography variant="h6" fontWeight="bold" gutterBottom>
+                                Current Task
+                            </Typography>
+                            <Divider sx={{ mb: 2, backgroundColor: "rgba(255,255,255,0.3)" }} />
+                            <Stack spacing={1.5}>
+                                <Box>
+                                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                                        Title
+                                    </Typography>
+                                    <Typography variant="body1" fontWeight="bold">
+                                        {title || "No title"}
+                                    </Typography>
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                                        Priority
+                                    </Typography>
+                                    <Box>
+                                        <Chip
+                                            label={priority.toUpperCase()}
+                                            size="small"
+                                            color={getPriorityColor()}
+                                            sx={{ mt: 0.5 }}
+                                        />
+                                    </Box>
+                                </Box>
+                                <Box>
+                                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                                        Status
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                                    </Typography>
+                                </Box>
+                                {dueDate && (
+                                    <Box>
+                                        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+                                            Due Date
+                                        </Typography>
+                                        <Typography variant="body2">
+                                            {new Date(dueDate).toLocaleDateString()}
+                                        </Typography>
+                                    </Box>
+                                )}
+                            </Stack>
+                        </Paper>
+                    </Grid>
+                </Grid>
+            </Container>
+        </Box>
     );
 
 

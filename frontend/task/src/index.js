@@ -11,6 +11,7 @@ import LogsPage from './pages/LogsPage';
 import SuperuserRoute from './component/SuperuserRoute';
 import UserProfilePage from './pages/UserProfilePage';
 import TeamsManagementPage from './pages/TeamsManagementPage';
+import TeamDetailsPage from './pages/TeamDetailsPage';
 
 const router = createBrowserRouter ([
     {path: "/", element: <LoginPage />},
@@ -22,6 +23,7 @@ const router = createBrowserRouter ([
   {path : "logs", element: <SuperuserRoute><LogsPage /></SuperuserRoute>},
   {path : "user-profile", element: <UserProfilePage />},
   {path : "teams", element: <TeamsManagementPage />},
+  {path : "teams/:teamId/details", element: <TeamDetailsPage />},
 ]);
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
