@@ -23,6 +23,7 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
+    DialogContentText,
     DialogActions,
     IconButton,
     Divider,
@@ -40,6 +41,7 @@ import {
     CheckCircle,
     Delete,
     Close,
+    Warning
 } from '@mui/icons-material';
 import useTeamDetails from '../hooks/useTeamDetails';
 import Header from '../component/Header';
@@ -53,6 +55,7 @@ export default function TeamDetailsPage() {
     const [showCreateDialog, setShowCreateDialog] = useState(false);
     const [selectedTask, setSelectedTask] = useState(null);
     const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [toast, setToast] = useState({ open: false, message: '', severity: 'success' });
 
     const {
@@ -101,14 +104,27 @@ export default function TeamDetailsPage() {
         }
     };
 
-    const handleDeleteTask = async (taskId) => {
-        const result = await deleteTask(taskId);
+    const handleDeleteTask = async () => {
+        if (!selectedTask) return;
+        
+        const result = await deleteTask(selectedTask.id);
         if (result.success) {
             showToast(result.message, 'success');
             setTaskDialogOpen(false);
+            setDeleteDialogOpen(false);
+            setSelectedTask(null);
         } else {
             showToast(result.error, 'error');
+            setDeleteDialogOpen(false);
         }
+    };
+
+    const handleOpenDeleteDialog = () => {
+        setDeleteDialogOpen(true);
+    };
+
+    const handleCloseDeleteDialog = () => {
+        setDeleteDialogOpen(false);
     };
 
     const handleTaskClick = (task) => {
@@ -574,11 +590,7 @@ export default function TeamDetailsPage() {
                                                     variant="outlined"
                                                     color="error"
                                                     startIcon={<Delete />}
-                                                    onClick={() => {
-                                                        if (window.confirm(`Delete "${selectedTask.title}"?`)) {
-                                                            handleDeleteTask(selectedTask.id);
-                                                        }
-                                                    }}
+                                                    onClick={handleOpenDeleteDialog}
                                                 >
                                                     Delete
                                                 </Button>
@@ -627,6 +639,65 @@ export default function TeamDetailsPage() {
                         onTaskCreated={handleTaskCreated}
                     />
                 </Container>
+
+                {/* Delete Confirmation Dialog */}
+                <Dialog
+                    open={deleteDialogOpen}
+                    onClose={handleCloseDeleteDialog}
+                    aria-labelledby="delete-dialog-title"
+                    aria-describedby="delete-dialog-description"
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 2,
+                            minWidth: 400,
+                        },
+                    }}
+                >
+                    <DialogTitle id="delete-dialog-title" sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Warning color="error" sx={{ fontSize: 32 }} />
+                        <Typography variant="h6" component="span" fontWeight="bold">
+                            Delete Task
+                        </Typography>
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="delete-dialog-description">
+                            Are you sure you want to delete this task?
+                        </DialogContentText>
+                        {selectedTask && (
+                            <Box sx={{ mt: 2, p: 2, backgroundColor: "#f5f5f5", borderRadius: 1 }}>
+                                <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                                    {selectedTask.title}
+                                </Typography>
+                                <Typography variant="body2" color="text.secondary">
+                                    {selectedTask.description || "No description"}
+                                </Typography>
+                            </Box>
+                        )}
+                        <Alert severity="warning" sx={{ mt: 2 }}>
+                            This action cannot be undone!
+                        </Alert>
+                    </DialogContent>
+                    <DialogActions sx={{ p: 2.5, pt: 1 }}>
+                        <Button
+                            onClick={handleCloseDeleteDialog}
+                            variant="outlined"
+                            size="large"
+                            sx={{ minWidth: 100 }}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleDeleteTask}
+                            variant="contained"
+                            color="error"
+                            size="large"
+                            startIcon={<Delete />}
+                            sx={{ minWidth: 100 }}
+                        >
+                            Delete
+                        </Button>
+                    </DialogActions>
+                </Dialog>
 
                 {/* Toast Notifications */}
                 <Snackbar 

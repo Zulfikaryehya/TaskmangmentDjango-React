@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Task manger",
+  "name": "Task manger App done with React and Django",
   "icons": [
     {
       "src": "favicon.ico",
