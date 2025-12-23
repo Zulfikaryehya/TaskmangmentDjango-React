@@ -26,6 +26,7 @@ import {
     CheckCircle,
     ArrowBack,
 } from "@mui/icons-material";
+import Header from "../component/Header";
 
 export default function CreateTasksPage() {
     const [title, setTitle] = useState("");
@@ -35,6 +36,12 @@ export default function CreateTasksPage() {
     const [priority, setPriority] = useState("medium");
     const [error, setError] = useState("");
     const navigate = useNavigate();
+
+    const handleLogout = () => {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        navigate("/login");
+    };
 
     const handleCreateTask = async (e) => {
         e.preventDefault();
@@ -87,26 +94,20 @@ export default function CreateTasksPage() {
     };
 
     return (
-        <Box
-            sx={{
-                minHeight: "100vh",
-                backgroundColor: "#f5f5f5",
-                py: 4,
-                px: 2,
-            }}
-        >
+        <>
+            <Header handleLogout={handleLogout} />
+            <Box
+                sx={{
+                    minHeight: "100vh",
+                    backgroundColor: "#f5f5f5",
+                    py: 4,
+                    px: 2,
+                }}
+            >
             <Container maxWidth="lg">
                 {/* Header Section */}
                 <Box sx={{ mb: 3 }}>
-                    <Button
-                        startIcon={<ArrowBack />}
-                        onClick={() => navigate("/home")}
-                        sx={{
-                            mb: 2,
-                        }}
-                    >
-                        Back to Home Page
-                    </Button>
+                 
                     <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                         <AddTask sx={{ fontSize: 40, color: "primary.main" }} />
                         <Box>
@@ -361,6 +362,7 @@ export default function CreateTasksPage() {
                     </Grid>
                 </Grid>
             </Container>
-        </Box>
+            </Box>
+        </>
     );
 }
